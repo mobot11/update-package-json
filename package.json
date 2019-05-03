@@ -3,13 +3,23 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "update-package-json": "./lib/update-package-json.js"
+  },
   "scripts": {
-    "build": "babel src --out-dir lib",
-    "build:watch": "babel src --out-dir lib --watch"
+    "build": "rm -rf lib && NODE_ENV=production babel src --out-dir lib",
+    "build:watch": "babel src --out-dir lib --watch",
+    "lint": "eslint 'src/**' --ext .js --env node",
+    "lint:pre-commit": "printf \"running pre-commit lint...\"  && npm run lint && printf \"done!\n\"",
+    "release": "./scripts/publish-release.sh",
+    "release:create": "./lib/create-release.js",
+    "std-version": "standard-version -m \"chore(release): version %s build ${TRAVIS_BUILD_NUMBER} [ci skip]\""
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "regenerator-runtime": "^0.13.2"
+  },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.4",
@@ -17,6 +27,11 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
     "@babel/plugin-transform-object-assign": "^7.2.0",
     "@babel/preset-env": "^7.4.4",
-    "@babel/preset-react": "^7.0.0"
+    "@babel/preset-react": "^7.0.0",
+    "eslint": "^5.3.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react": "^7.12.4"
   }
 }

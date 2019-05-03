@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-import { getConcurDeps } from './utils/updatePackageJson';
+// eslint-disable-next-line
+import regeneratorRuntime from 'regenerator-runtime';
 import path from 'path';
 import { promisify } from 'util';
-// eslint-disable-next-line
-import regeneratorRuntime from "regenerator-runtime";
+
+import { getConcurDeps } from './utils/updatePackageJson';
+
 
 let pkg = require(path.resolve(process.cwd(), 'package.json'));
 // Get dependencies as an array of tuples.
@@ -14,7 +16,7 @@ const peerDependencies = getConcurDeps(pkg.peerDependencies);
 const allDeps = {
     dependencies,
     devDependencies,
-    peerDependencies
+    peerDependencies,
 };
 
 
@@ -22,10 +24,10 @@ const exec = promisify(require('child_process').exec);
 const writeFile = promisify(require('fs').writeFile);
 
 // Get the latest version of the package from npm.
-const getLatestVersion = async(dependency) => {
+const getLatestVersion = async (dependency) => {
     const name = dependency[0];
     const version = dependency[1];
-    const hasHat = new RegExp('\^');
+    const hasHat = new RegExp('^');
     // Don't update locked dependencies.
     if (!hasHat.test(version)) {
         return dependency;
@@ -44,11 +46,9 @@ const getLatestVersion = async(dependency) => {
         const cleanVersion = version.replace('^', '');
         const versionArray = cleanVersion.split('.');
         const majorVersion = versionArray[0];
-        
+
         // Grab the most recent version that has the same major version number as our dependency.
-        const mostRecentRelease = versions.filter(single => {
-            return single.replace('^', '').split('.')[0] === majorVersion && ! single.includes('-rc');
-        }).reverse()[0];
+        const mostRecentRelease = versions.filter(single => single.replace('^', '').split('.')[0] === majorVersion && !single.includes('-rc')).reverse()[0];
         // if the versions are the same, return original.
         if (cleanVersion === mostRecentRelease) {
             return dependency;
@@ -65,37 +65,42 @@ const getLatestVersion = async(dependency) => {
 const getLatestVersions = async(dependenciesArray) => {
     try {
         return await Promise.all(dependenciesArray.map(dependency => getLatestVersion(dependency)));
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         throw e;
     }
     
 };
 
-const updatePackageJson = async(depsToUpdate) => {
+const updatePackageJson = async (depsToUpdate) => {
     try {
         const updatedDependencies = await getLatestVersions(depsToUpdate.dependencies);
         const updatedDevDependencies = await getLatestVersions(depsToUpdate.devDependencies);
         const updatedPeerDependencies = await getLatestVersions(depsToUpdate.peerDependencies);
-    
-        updatedDependencies.map(dependency => {
-            if (pkg.devDependencies[dependency[0]]) {
-                pkg.devDependencies[dependency[0]] = dependency[1];
+        // eslint-disable-next-line
+        updatedDependencies.map((dependency) => {
+            const [name, version] = dependency;
+            if (pkg.dependencies[name]) {
+                pkg.dependencies[name] = version;
             }
         });
-        updatedDevDependencies.map(devDependency => {
-            if (pkg.devDependencies[devDependency[0]]) {
-                pkg.devDependencies[devDependency[0]] = devDependency[1];
+        // eslint-disable-next-line
+        updatedDevDependencies.map((devDependency) => {
+            const [name, version] = devDependency;
+            if (pkg.devDependencies[name]) {
+                pkg.devDependencies[name] = version;
             }
         });
+        // eslint-disable-next-line
         updatedPeerDependencies.map(peerDependency => {
+            const [name, version] = peerDependency;
             if (pkg.peerDependencies[peerDependency[0]]) {
-                pkg.peerDependencies[peerDependency[0]] = peerDependency[1];
+                pkg.peerDependencies[name] = version;
             }
         });
     } catch (e) {
         console.error(e);
-        throw(e);
+        throw (e);
     }
 
     try {
@@ -106,5 +111,5 @@ const updatePackageJson = async(depsToUpdate) => {
         throw e;
     }
 };
-
-(async() => await updatePackageJson(allDeps))();
+// eslint-disable-next-line
+(async () => await updatePackageJson(allDeps))();
